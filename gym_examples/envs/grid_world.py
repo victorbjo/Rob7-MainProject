@@ -2,12 +2,12 @@ import gym
 from gym import spaces
 import pygame
 import numpy as np
-
+import random
 
 class GridWorldEnv(gym.Env):
     metadata = {"render_modes": ["human", "rgb_array"], "render_fps": 4}
 
-    def __init__(self, render_mode=None, size=5):
+    def __init__(self, render_mode='human', size=5):
         self.size = size  # The size of the square grid
         self.window_size = 512  # The size of the PyGame window
 
@@ -54,29 +54,28 @@ class GridWorldEnv(gym.Env):
     def _get_info(self):
         return {
             "distance": np.linalg.norm(
-                self._agent_location - self._target_location, ord=1
+                self._agent_location[0] - self._target_location[0]
             )
         }
 
-    def reset(self, seed=None, options=None):
+    def reset(self):
         # We need the following line to seed self.np_random
-        super().reset(seed=seed)
+        #super().reset()
 
         # Choose the agent's location uniformly at random
-        self._agent_location = self.np_random.integers(0, self.size, size=2, dtype=int)
+        self._agent_location = [random.randrange(1,50)*10,random.randrange(1,50)*10]
 
         # We will sample the target's location randomly until it does not coincide with the agent's location
         self._target_location = self._agent_location
         while np.array_equal(self._target_location, self._agent_location):
-            self._target_location = self.np_random.integers(
-                0, self.size, size=2, dtype=int
-            )
+            self._target_location = [random.randrange(1,self.size),random.randrange(1,self.size)]
 
         observation = self._get_obs()
         info = self._get_info()
 
         if self.render_mode == "human":
-            self._render_frame()
+            pass
+            #self._render_frame()
 
         return observation
 
@@ -94,13 +93,15 @@ class GridWorldEnv(gym.Env):
         info = self._get_info()
 
         if self.render_mode == "human":
-            self._render_frame()
+            pass
+            #self._render_frame()
 
         return observation, reward, terminated, info
 
-    def render(self):
+    def render(self, mode):
         if self.render_mode == "rgb_array":
             return self._render_frame()
+        return self._render_frame()
 
     def _render_frame(self):
         if self.window is None and self.render_mode == "human":
@@ -115,13 +116,12 @@ class GridWorldEnv(gym.Env):
         pix_square_size = (
             self.window_size / self.size
         )  # The size of a single grid square in pixels
-
         # First we draw the target
         pygame.draw.rect(
             canvas,
             (255, 0, 0),
             pygame.Rect(
-                pix_square_size * self._target_location,
+                ((self._target_location[0]) * pix_square_size ,(self._target_location[1]) * pix_square_size),
                 (pix_square_size, pix_square_size),
             ),
         )

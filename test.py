@@ -11,16 +11,18 @@ env = gym.make('gym_examples/GridWorld-v0')
 #check_env(env)
 
 
-model = PPO("MultiInputPolicy", env)
+model = PPO("MultiInputPolicy", env, verbose=1)
 
-model.learn(total_timesteps=10, reset_num_timesteps=False, tb_log_name="PPO")
-episodes = 5
+model.learn(total_timesteps=30000, reset_num_timesteps=False, tb_log_name="PPO")
+episodes = 10
 
 for ep in range(episodes):
     obs = env.reset()
     done = False
     while not done:
         action = model.predict(obs)
-        obs, rewards, done, info = env.step(1)
-        print(action)
-        done = True
+        #print(type(int(action[0])))
+        
+        #print(int(action[0]))
+        obs, rewards, done, info, = env.step(int(action[0]))
+        env.render()
