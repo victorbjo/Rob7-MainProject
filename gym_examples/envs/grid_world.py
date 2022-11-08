@@ -7,7 +7,7 @@ import random
 class GridWorldEnv(gym.Env):
     metadata = {"render_modes": ["human", "rgb_array"], "render_fps": 4}
 
-    def __init__(self, render_mode='human', size=5):
+    def __init__(self, render_mode='human', size = 6):
         self.size = size  # The size of the square grid
         self.window_size = 512  # The size of the PyGame window
 
@@ -63,13 +63,13 @@ class GridWorldEnv(gym.Env):
         #super().reset()
 
         # Choose the agent's location uniformly at random
-        self._agent_location = [random.randrange(1,50)*10,random.randrange(1,50)*10]
-        # self._agent_location = [random.randrange(1,self.size),random.randrange(1,self.size)]
+        # self._agent_location = [random.randrange(1,50)*10,random.randrange(1,50)*10]
+        self._agent_location = [random.randrange(0,self.size),random.randrange(0,self.size)]
 
         # We will sample the target's location randomly until it does not coincide with the agent's location
         self._target_location = self._agent_location
         while np.array_equal(self._target_location, self._agent_location):
-            self._target_location = [random.randrange(1,self.size),random.randrange(1,self.size)]
+            self._target_location = [random.randrange(0,self.size),random.randrange(0,self.size)]
 
         observation = self._get_obs()
         info = self._get_info()
@@ -89,10 +89,11 @@ class GridWorldEnv(gym.Env):
         )
         # An episode is done iff the agent has reached the target
         terminated = np.array_equal(self._agent_location, self._target_location)
-        # reward = 100 if terminated else -1  # Binary sparse rewards
-        highest_distance = np.power(self.size -1 ,2)
-        distance_intensity_factor = 3 # should be odd because we use power for intensity after nomalizing around 0
-        reward = np.power((highest_distance/2 - np.linalg.norm(self._agent_location - self._target_location)),distance_intensity_factor)
+        reward = 100 if terminated else -1  # Binary sparse rewards
+        # highest_distance = (self.size -1) * np.sqrt(2) # np.power(self.size -1 ,2)
+        # distance_intensity_factor = 3 # should be odd because we use power for intensity after nomalizing around 0
+        # reward = np.power((highest_distance*(0.6) - np.linalg.norm(self._agent_location - self._target_location)),distance_intensity_factor)
+        # reward = (highest_distance*(0.1) - np.linalg.norm(self._agent_location - self._target_location))*distance_intensity_factor
         observation = self._get_obs()
         info = self._get_info()
 
