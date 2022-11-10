@@ -89,9 +89,12 @@ class GridWorldEnv(gym.Env):
         )
         # An episode is done iff the agent has reached the target
         terminated = np.array_equal(self._agent_location, self._target_location)
-        reward = 100 if terminated else -1  # Binary sparse rewards
-        # highest_distance = (self.size -1) * np.sqrt(2) # np.power(self.size -1 ,2)
-        # distance_intensity_factor = 3 # should be odd because we use power for intensity after nomalizing around 0
+        # reward = 100 if terminated else -1  # Binary sparse rewards
+        highest_distance = (self.size -1) * np.sqrt(2) # np.power(self.size -1 ,2)
+        distance_intensity_factor = 3 # should be odd because we use power for intensity after nomalizing around 0
+        reward = -1 * np.power(np.linalg.norm(self._agent_location - self._target_location),distance_intensity_factor)
+        if reward == 0:
+            reward = 20
         # reward = np.power((highest_distance*(0.6) - np.linalg.norm(self._agent_location - self._target_location)),distance_intensity_factor)
         # reward = (highest_distance*(0.1) - np.linalg.norm(self._agent_location - self._target_location))*distance_intensity_factor
         observation = self._get_obs()
