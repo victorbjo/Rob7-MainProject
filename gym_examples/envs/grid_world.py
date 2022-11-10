@@ -33,7 +33,19 @@ class GridWorldEnv(gym.Env):
             1: np.array([0, 1]),
             2: np.array([-1, 0]),
             3: np.array([0, -1]),
-        }
+         }
+        """ 8 directions action space""" 
+        # self._action_to_direction = {
+        #     0: np.array([1, 0]),
+        #     1: np.array([1, 1]),
+        #     2: np.array([0, 1]),
+        #     3: np.array([-1, 1]),
+        #     4: np.array([-1, 0]),
+        #     5: np.array([-1, -1]),
+        #     6: np.array([0, -1]),
+        #     7: np.array([1, -1]),
+        # }
+
 
         assert render_mode is None or render_mode in self.metadata["render_modes"]
         self.render_mode = render_mode
