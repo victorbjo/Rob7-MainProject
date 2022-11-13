@@ -107,13 +107,13 @@ class GridWorldEnv(gym.Env):
         if newDist < oldDist:
             reward = 2
         elif newDist == oldDist:
-            reward = -1
+            reward = -3
         else:
-            reward = -10
+            reward = -20
         if terminated and self.turtle0.battery > 2:
-            reward = 100
-        elif terminated and self.turtle0.battery <= 2:
-            reward = -6
+            reward = 50
+        elif terminated and self.turtle0.battery < 2:
+            reward = -25
             terminated = False
         elif terminated:
             reward = 0
@@ -122,14 +122,14 @@ class GridWorldEnv(gym.Env):
             terminated = True
         if self.turtle0.battery < 2:
             if newBatDist < oldBatDist:
-                reward = 2
+                reward = 4
             elif newBatDist == oldBatDist:
-                reward = -1
+                reward = -3
             else:
-                reward = -10
+                reward = -(25 * (2-self.turtle0.battery))
         if np.array_equal(self.turtle0.location, self._charging_station_location) and self.turtle0.battery < 2:
             self.turtle0.battery = 5
-            reward = 100
+            reward = 10
         observation = self._get_obs()
         info = self._get_info()
 

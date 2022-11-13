@@ -21,7 +21,7 @@ class turtle():
             self.battery = 0
     def reset(self):
         self.location = [random.randrange(0,self.size),random.randrange(0,self.size)]
-        self.battery = random.randrange(1,6)
+        self.battery = random.randrange(1,4)
 if __name__ == "__main__":
     a = (1,1)
     b = (1,1)
