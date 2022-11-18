@@ -22,6 +22,16 @@ class turtle():
     def reset(self):
         self.location = [random.randrange(0,self.size),random.randrange(0,self.size)]
         self.battery = random.randrange(1,4)
+
+            
+class workStation():
+    def __init__(self, size = 6):
+        self.size = size
+        self.location = [random.randrange(0,self.size),random.randrange(0,self.size)]
+    def reset(self):
+        self.getNewLoc()
+    def getNewLoc(self):
+        self.location = [random.randrange(0,self.size),random.randrange(0,self.size)]
 if __name__ == "__main__":
     a = (1,1)
     b = (1,1)

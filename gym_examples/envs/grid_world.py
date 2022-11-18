@@ -11,6 +11,7 @@ class GridWorldEnv(gym.Env):
         self.size = size  # The size of the square grid
         self.window_size = 512  # The size of the PyGame window
         self.turtle0 = turtle(self.size)
+        self.target0 = workStation(self.size)
         # Observations are dictionaries with the agent's and the target's location.
         # Each location is encoded as an element of {0, ..., `size`}^2, i.e. MultiDiscrete([size, size]).
         self.observation_space = spaces.Dict(
@@ -22,8 +23,9 @@ class GridWorldEnv(gym.Env):
         )
 
         # We have 4 actions, corresponding to "right", "up", "left", "down", "right"
+        actionSpaceArray = [4]
+        #self.action_space = spaces.MultiDiscrete(actionSpaceArray)
         self.action_space = spaces.Discrete(4)
-
         """
         The following dictionary maps abstract actions from `self.action_space` to 
         the direction we will walk in if that action is taken.
@@ -58,12 +60,12 @@ class GridWorldEnv(gym.Env):
 
     def _get_obs(self):
         return {"agent": [self.turtle0.location[0],self.turtle0.location[1],self.turtle0.battery], 
-        "target": self._target_location, "charging_station": self._charging_station_location}
+        "target": self.target0.location, "charging_station": self._charging_station_location}
 
     def _get_info(self):
         return {
             "distance": np.linalg.norm(
-                self.turtle0.location[0] - self._target_location[0]
+                self.turtle0.location[0] - self.target0.location[0]
             )
         }
 
@@ -74,12 +76,13 @@ class GridWorldEnv(gym.Env):
         # Choose the agent's location uniformly at random
         # self._agent_location = [random.randrange(1,50)*10,random.randrange(1,50)*10]
         self.turtle0.reset()
+        self.target0.reset()
         self._charging_station_location = [random.randrange(0,self.size),random.randrange(0,self.size)]
         # We will sample the target's location randomly until it does not coincide with the agent's location
-        self._target_location = self.turtle0.location
-        while manhattenDist(self.turtle0.location, self._target_location) < 2 :
-            self._target_location = [random.randrange(0,self.size),random.randrange(0,self.size)]
-        while manhattenDist(self._charging_station_location, self._target_location) < 2 or manhattenDist(self._charging_station_location, self.turtle0.location) < 1:
+        self.target0.location = self.turtle0.location
+        while manhattenDist(self.turtle0.location, self.target0.location) < 2 :
+            self.target0.getNewLoc()
+        while manhattenDist(self._charging_station_location, self.target0.location) < 2 or manhattenDist(self._charging_station_location, self.turtle0.location) < 1:
             self._charging_station_location = [random.randrange(0,self.size),random.randrange(0,self.size)]
         observation = self._get_obs()
         info = self._get_info()
@@ -90,14 +93,15 @@ class GridWorldEnv(gym.Env):
         return observation
 
     def step(self, action):
+        #action = action[0]
         # Map the action (element of {0,1,2,3}) to the direction we walk in
-        oldDist = manhattenDist(self.turtle0.location, self._target_location)
+        oldDist = manhattenDist(self.turtle0.location, self.target0.location)
         oldLoc = self.turtle0.location
         self.turtle0.move(action)
         # We use `np.clip` to make sure we don't leave the grid
-        newDist = manhattenDist(self.turtle0.location, self._target_location)
+        newDist = manhattenDist(self.turtle0.location, self.target0.location)
         # An episode is done iff the agent has reached the target
-        terminated = np.array_equal(self.turtle0.location, self._target_location)
+        terminated = np.array_equal(self.turtle0.location, self.target0.location)
         # reward = 100 if terminated else -1  # Binary sparse rewards
         highest_distance = (self.size -1) * np.sqrt(2) # np.power(self.size -1 ,2)
         distance_intensity_factor = 3 # should be odd because we use power for intensity after nomalizing around 0
@@ -105,11 +109,11 @@ class GridWorldEnv(gym.Env):
         oldBatDist = manhattenDist(oldLoc, self._charging_station_location)
         newBatDist = manhattenDist(self.turtle0.location, self._charging_station_location)
         if newDist < oldDist:
-            reward = 2
+            reward = 5
         elif newDist == oldDist:
             reward = -3
         else:
-            reward = -20
+            reward = -15
         if terminated and self.turtle0.battery > 2:
             reward = 50
         elif terminated and self.turtle0.battery < 2:
@@ -163,7 +167,16 @@ class GridWorldEnv(gym.Env):
             (robot.location + 0.5) * pix_square_size,
             pix_square_size / 3,
         )
-    
+
+    def _renderTarget(self, target : workStation, canvas, pix_square_size):
+        pygame.draw.rect(
+            canvas,
+            (255, 0, 0),
+            pygame.Rect(
+                ((self.target0.location[0]) * pix_square_size ,(self.target0.location[1]) * pix_square_size),
+                (pix_square_size, pix_square_size),
+            ),
+        )
     def _render_frame(self):
         if self.window is None and self.render_mode == "human":
             pygame.init()
@@ -178,17 +191,9 @@ class GridWorldEnv(gym.Env):
             self.window_size / self.size
         )  # The size of a single grid square in pixels
         # First we draw the target
-        pygame.draw.rect(
-            canvas,
-            (255, 0, 0),
-            pygame.Rect(
-                ((self._target_location[0]) * pix_square_size ,(self._target_location[1]) * pix_square_size),
-                (pix_square_size, pix_square_size),
-            ),
-        )
 
         
-
+        self._renderTarget(self.target0,canvas,pix_square_size)
         pygame.draw.rect(
             canvas,
             (40, 255, 40),
