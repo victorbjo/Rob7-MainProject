@@ -7,16 +7,19 @@ from .envTools import *
 class GridWorldEnv(gym.Env):
     metadata = {"render_modes": ["human", "rgb_array"], "render_fps": 4}
 
-    def __init__(self, render_mode='human', size = 6):
+    def __init__(self, render_mode='human', size = 7):
         self.size = size  # The size of the square grid
         self.window_size = 512  # The size of the PyGame window
-        self.turtle0 = turtle(self.size)
+        self.turtle0 = turtle(1, self.size)
+        self.turtle1 = turtle(2, self.size)
         self.target0 = workStation(self.size)
+        self.chargingStation = ChargingStation(self.size)
         # Observations are dictionaries with the agent's and the target's location.
         # Each location is encoded as an element of {0, ..., `size`}^2, i.e. MultiDiscrete([size, size]).
         self.observation_space = spaces.Dict(
             {
                 "agent": spaces.Box(0, size - 1, shape=(3,), dtype=int), 
+                "agent1": spaces.Box(0, size - 1, shape=(3,), dtype=int), 
                 "target": spaces.Box(0, size - 1, shape=(2,), dtype=int),
                 "charging_station": spaces.Box(0, size - 1, shape=(2,), dtype=int),
             }
@@ -59,8 +62,8 @@ class GridWorldEnv(gym.Env):
         self.clock = None
 
     def _get_obs(self):
-        return {"agent": [self.turtle0.location[0],self.turtle0.location[1],self.turtle0.battery], 
-        "target": self.target0.location, "charging_station": self._charging_station_location}
+        return {"agent": self.turtle0.get_state(), "agent1": self.turtle1.get_state(),
+        "target": self.target0.location, "charging_station": self.chargingStation.location}
 
     def _get_info(self):
         return {
@@ -76,14 +79,15 @@ class GridWorldEnv(gym.Env):
         # Choose the agent's location uniformly at random
         # self._agent_location = [random.randrange(1,50)*10,random.randrange(1,50)*10]
         self.turtle0.reset()
+        self.turtle1.reset()
         self.target0.reset()
-        self._charging_station_location = [random.randrange(0,self.size),random.randrange(0,self.size)]
+        self.chargingStation.reset()
         # We will sample the target's location randomly until it does not coincide with the agent's location
         self.target0.location = self.turtle0.location
         while manhattenDist(self.turtle0.location, self.target0.location) < 2 :
             self.target0.getNewLoc()
-        while manhattenDist(self._charging_station_location, self.target0.location) < 2 or manhattenDist(self._charging_station_location, self.turtle0.location) < 1:
-            self._charging_station_location = [random.randrange(0,self.size),random.randrange(0,self.size)]
+        while manhattenDist(self.chargingStation.location, self.target0.location) < 2 or manhattenDist(self.chargingStation.location, self.turtle0.location) < 1:
+            self.chargingStation.reset()
         observation = self._get_obs()
         info = self._get_info()
 
@@ -98,6 +102,7 @@ class GridWorldEnv(gym.Env):
         oldDist = manhattenDist(self.turtle0.location, self.target0.location)
         oldLoc = self.turtle0.location
         self.turtle0.move(action)
+        self.turtle1.move(action)
         # We use `np.clip` to make sure we don't leave the grid
         newDist = manhattenDist(self.turtle0.location, self.target0.location)
         # An episode is done iff the agent has reached the target
@@ -106,8 +111,8 @@ class GridWorldEnv(gym.Env):
         highest_distance = (self.size -1) * np.sqrt(2) # np.power(self.size -1 ,2)
         distance_intensity_factor = 3 # should be odd because we use power for intensity after nomalizing around 0
         #reward = -0.1 * np.power(manhattenDist(self.turtle0.location, self._target_location),distance_intensity_factor)
-        oldBatDist = manhattenDist(oldLoc, self._charging_station_location)
-        newBatDist = manhattenDist(self.turtle0.location, self._charging_station_location)
+        oldBatDist = manhattenDist(oldLoc, self.chargingStation.location)
+        newBatDist = manhattenDist(self.turtle0.location, self.chargingStation.location)
         if newDist < oldDist:
             reward = 5
         elif newDist == oldDist:
@@ -131,7 +136,7 @@ class GridWorldEnv(gym.Env):
                 reward = -3
             else:
                 reward = -(25 * (2-self.turtle0.battery))
-        if np.array_equal(self.turtle0.location, self._charging_station_location) and self.turtle0.battery < 2:
+        if np.array_equal(self.turtle0.location, self.chargingStation.location) and self.turtle0.battery < 2:
             self.turtle0.battery = 5
             reward = 10
         observation = self._get_obs()
@@ -177,6 +182,15 @@ class GridWorldEnv(gym.Env):
                 (pix_square_size, pix_square_size),
             ),
         )
+    def _renderChargingStation(self, chargingStation : ChargingStation, canvas, pix_square_size):
+        pygame.draw.rect(
+            canvas,
+            (30, 230, 30),
+            pygame.Rect(
+                ((self.chargingStation.location[0]) * pix_square_size ,(self.chargingStation.location[1]) * pix_square_size),
+                (pix_square_size, pix_square_size),
+            ),
+        )
     def _render_frame(self):
         if self.window is None and self.render_mode == "human":
             pygame.init()
@@ -194,16 +208,10 @@ class GridWorldEnv(gym.Env):
 
         
         self._renderTarget(self.target0,canvas,pix_square_size)
-        pygame.draw.rect(
-            canvas,
-            (40, 255, 40),
-            pygame.Rect(
-                ((self._charging_station_location[0]) * pix_square_size ,(self._charging_station_location[1]) * pix_square_size),
-                (pix_square_size, pix_square_size),
-            ),
-        )
+        self._renderChargingStation(self.chargingStation,canvas,pix_square_size)
         
         self._renderRobot(self.turtle0, canvas, pix_square_size)
+        self._renderRobot(self.turtle1, canvas, pix_square_size)
         # Finally, add some gridlines
         for x in range(self.size + 1):
             pygame.draw.line(
