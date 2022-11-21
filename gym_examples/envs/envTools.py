@@ -24,7 +24,7 @@ class turtle():
     def reset(self):
         self.location = [random.randrange(0,self.size),random.randrange(0,self.size)]
         self.battery = random.randrange(20,60)
-    def get_state(self):
+    def getState(self):
         return [self.location[0],self.location[1], self.battery, self.type]
             
 class workStation():
@@ -36,6 +36,8 @@ class workStation():
         self.getNewLoc()
     def getNewLoc(self):
         self.location = [random.randrange(0,self.size),random.randrange(0,self.size)]
+    def getState(self):
+        return [self.location[0],self.location[1], self.type]
 class ChargingStation(workStation):
     def __init__(self, size = 6):
         self.size = size

@@ -12,7 +12,7 @@ class GridWorldEnv(gym.Env):
         self.window_size = 512  # The size of the PyGame window
         self.turtle0 = turtle(1, self.size)
         self.turtle1 = turtle(2, self.size)
-        self.target0 = workStation(self.size)
+        self.target0 = workStation(1, self.size)
         self.chargingStation = ChargingStation(self.size)
         # Observations are dictionaries with the agent's and the target's location.
         # Each location is encoded as an element of {0, ..., `size`}^2, i.e. MultiDiscrete([size, size]).
@@ -63,8 +63,8 @@ class GridWorldEnv(gym.Env):
         self.clock = None
 
     def _get_obs(self):
-        return {"agent": self.turtle0.get_state(), "agent1": self.turtle1.get_state(),
-        "target": self.target0.location, "charging_station": self.chargingStation.location}
+        return {"agent": self.turtle0.getState(), "agent1": self.turtle1.getState(),
+        "target": self.target0.getState(), "charging_station": self.chargingStation.location}
 
     def _get_info(self):
         return {
