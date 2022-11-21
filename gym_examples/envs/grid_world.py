@@ -156,8 +156,8 @@ class GridWorldEnv(gym.Env):
             return self._render_frame()
         return self._render_frame()
 
-    def _renderRobot(self,robot : turtle, canvas, pix_square_size):
-        color = (35,255,35) if self.robot.battery > self.robot.lowBattery else (255,35,35)
+    def _renderRobot(self, robot : turtle, canvas, pix_square_size):
+        color = (35,255,35) if robot.battery > robot.lowBattery else (255,35,35)
         pygame.draw.rect(
             canvas,
             color,
