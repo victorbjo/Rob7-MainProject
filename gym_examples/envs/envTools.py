@@ -7,7 +7,8 @@ class turtle():
         self.size = size
         self.type = type
         self.location = [random.randrange(0,self.size),random.randrange(0,self.size)]
-        self.battery = random.randrange(1,6)
+        self.battery = random.randrange(20,60)
+        self.lowBattery = 30
         self._action_to_direction = {
             0: np.array([1, 0]),
             1: np.array([0, 1]),
@@ -17,14 +18,14 @@ class turtle():
     def move(self, action):
         direction = self._action_to_direction[action]
         self.location = np.clip(self.location + direction, 0, self.size - 1)
-        self.battery -= 0.05
+        self.battery -= 1
         if self.battery < 0:
             self.battery = 0
     def reset(self):
         self.location = [random.randrange(0,self.size),random.randrange(0,self.size)]
-        self.battery = random.randrange(1,4)
+        self.battery = random.randrange(20,60)
     def get_state(self):
-        return [self.location[0],self.location[1],self.battery]
+        return [self.location[0],self.location[1], self.battery, self.type]
             
 class workStation():
     def __init__(self, type, size = 6):

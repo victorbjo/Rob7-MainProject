@@ -16,10 +16,11 @@ class GridWorldEnv(gym.Env):
         self.chargingStation = ChargingStation(self.size)
         # Observations are dictionaries with the agent's and the target's location.
         # Each location is encoded as an element of {0, ..., `size`}^2, i.e. MultiDiscrete([size, size]).
+        #"agent": spaces.Box(low=np.array([0, 0, 0, 1]), high=np.array([size-1, size-1, 100, 5]), dtype=int), 
         self.observation_space = spaces.Dict(
             {
-                "agent": spaces.Box(0, size - 1, shape=(3,), dtype=int), 
-                "agent1": spaces.Box(0, size - 1, shape=(3,), dtype=int), 
+                "agent": spaces.Box(low=np.array([0, 0, 0, 1]), high=np.array([size-1, size-1, 100, 5]), dtype=int), 
+                "agent1": spaces.Box(low=np.array([0, 0, 0, 1]), high=np.array([size-1, size-1, 100, 5]), dtype=int), 
                 "target": spaces.Box(0, size - 1, shape=(2,), dtype=int),
                 "charging_station": spaces.Box(0, size - 1, shape=(2,), dtype=int),
             }
@@ -119,9 +120,9 @@ class GridWorldEnv(gym.Env):
             reward = -3
         else:
             reward = -15
-        if terminated and self.turtle0.battery > 2:
+        if terminated and self.turtle0.battery > self.turtle0.lowBattery:
             reward = 50
-        elif terminated and self.turtle0.battery < 2:
+        elif terminated and self.turtle0.battery <= self.turtle0.lowBattery:
             reward = -25
             terminated = False
         elif terminated:
@@ -136,8 +137,8 @@ class GridWorldEnv(gym.Env):
                 reward = -3
             else:
                 reward = -(25 * (2-self.turtle0.battery))
-        if np.array_equal(self.turtle0.location, self.chargingStation.location) and self.turtle0.battery < 2:
-            self.turtle0.battery = 5
+        if np.array_equal(self.turtle0.location, self.chargingStation.location) and self.turtle0.battery < self.turtle0.lowBattery:
+            self.turtle0.battery = 100
             reward = 10
         observation = self._get_obs()
         info = self._get_info()
@@ -156,13 +157,13 @@ class GridWorldEnv(gym.Env):
         return self._render_frame()
 
     def _renderRobot(self,robot : turtle, canvas, pix_square_size):
-        color = (35,255,35) if self.turtle0.battery > 2 else (255,35,35)
+        color = (35,255,35) if self.robot.battery > self.robot.lowBattery else (255,35,35)
         pygame.draw.rect(
             canvas,
             color,
             pygame.Rect(
-                ((robot.location[0]+0.8) * pix_square_size ,((robot.location[1]+1-(robot.battery/5)) * pix_square_size)),
-                (pix_square_size*0.2, pix_square_size*robot.battery/5),
+                ((robot.location[0]+0.8) * pix_square_size ,((robot.location[1]+1-(robot.battery/100)) * pix_square_size)),
+                (pix_square_size*0.2, pix_square_size*robot.battery/100),
             ),
         )
         # Now we draw the agent
