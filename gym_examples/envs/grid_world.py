@@ -21,12 +21,12 @@ class GridWorldEnv(gym.Env):
             {
                 "agent": spaces.Box(low=np.array([0, 0, 0, 1]), high=np.array([size-1, size-1, 100, 5]), dtype=int), 
                 "agent1": spaces.Box(low=np.array([0, 0, 0, 1]), high=np.array([size-1, size-1, 100, 5]), dtype=int), 
-                "target": spaces.Box(0, size - 1, shape=(2,), dtype=int),
+                "target": spaces.Box(low=np.array([0, 0, 0,]), high=np.array([size-1, size-1, 5]), dtype=int), #DStructure [0]and[1] is xy pos [2] is the type of "lego" bricks needed 
                 "charging_station": spaces.Box(0, size - 1, shape=(2,), dtype=int),
             }
         )
 
-        # We have 4 actions, corresponding to "right", "up", "left", "down", "right"
+        #We have 4 actions, corresponding to "right", "up", "left", "down", "right"
         actionSpaceArray = [4]
         #self.action_space = spaces.MultiDiscrete(actionSpaceArray)
         self.action_space = spaces.Discrete(4)
