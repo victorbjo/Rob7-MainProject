@@ -5,7 +5,7 @@ def manhattenDist(robot, goal):
 class turtle():
     def __init__(self, type, size = 6):
         self.size = size
-        seælf.type = type
+        self.type = type
         self.location = [random.randrange(0,self.size),random.randrange(0,self.size)]
         self.battery = random.randrange(1,6)
         self._action_to_direction = {
