@@ -111,22 +111,15 @@ class GridWorldEnv(gym.Env):
         return observation
 
     def step(self, action):
-        #action = action[0]
-        # Map the action (element of {0,1,2,3}) to the direction we walk in
         oldDist = manhattenDist(self.turtle0.location, self.target0.location)
         oldLoc = self.turtle0.location
-        #self.turtle0.move(action)
-        #self.turtle1.move(action)
         for idx, turtle in enumerate(self.turtles):
             turtle.move(action[idx])
-        # We use `np.clip` to make sure we don't leave the grid
         newDist = manhattenDist(self.turtle0.location, self.target0.location)
-        # An episode is done iff the agent has reached the target
         terminated = np.array_equal(self.turtle0.location, self.target0.location)
-        # reward = 100 if terminated else -1  # Binary sparse rewards
-        highest_distance = (self.size -1) * np.sqrt(2) # np.power(self.size -1 ,2)
-        distance_intensity_factor = 3 # should be odd because we use power for intensity after nomalizing around 0
-        #reward = -0.1 * np.power(manhattenDist(self.turtle0.location, self._target_location),distance_intensity_factor)
+
+        highest_distance = (self.size -1) * np.sqrt(2) 
+
         oldBatDist = manhattenDist(oldLoc, self.chargingStation.location)
         newBatDist = manhattenDist(self.turtle0.location, self.chargingStation.location)
         if newDist < oldDist:
@@ -171,6 +164,15 @@ class GridWorldEnv(gym.Env):
             return self._render_frame()
         return self._render_frame()
 
+    def _drawTextCentered(self, surface, text, text_size, loc, size, color):
+        font = pygame.freetype.SysFont("monospace", 0) 
+        x = loc[0]*size
+        y = loc[1]*size
+        pos = (x, y)
+        text_rect = font.get_rect(text, size = 50)
+        text_rect.center = pos
+        font.render_to(surface, text_rect, text, color, size = 50)
+
     def _renderRobot(self, robot : Turtle, canvas, pix_square_size):
         color = (35,255,35) if robot.battery > robot.lowBattery else (255,35,35)
         pygame.draw.rect(
@@ -199,6 +201,7 @@ class GridWorldEnv(gym.Env):
             ),
         )
     def _renderChargingStation(self, chargingStation : ChargingStation, canvas, pix_square_size):
+        self._drawTextCentered(canvas, "C", 40, chargingStation.location, pix_square_size, (0,0,0))
         pygame.draw.rect(
             canvas,
             (30, 230, 30),
