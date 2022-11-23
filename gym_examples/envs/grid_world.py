@@ -166,8 +166,8 @@ class GridWorldEnv(gym.Env):
 
     def _drawTextCentered(self, surface, text, text_size, loc, size, color):
         font = pygame.freetype.SysFont("monospace", 0) 
-        x = loc[0]*size
-        y = loc[1]*size
+        x = (loc[0]*size)+45
+        y = (loc[1]*size)+45
         pos = (x, y)
         text_rect = font.get_rect(text, size = 50)
         text_rect.center = pos
@@ -201,7 +201,6 @@ class GridWorldEnv(gym.Env):
             ),
         )
     def _renderChargingStation(self, chargingStation : ChargingStation, canvas, pix_square_size):
-        self._drawTextCentered(canvas, "C", 40, chargingStation.location, pix_square_size, (0,0,0))
         pygame.draw.rect(
             canvas,
             (30, 230, 30),
@@ -210,6 +209,9 @@ class GridWorldEnv(gym.Env):
                 (pix_square_size, pix_square_size),
             ),
         )
+        self._drawTextCentered(canvas, "C", 40, chargingStation.location, pix_square_size, (0,0,0))
+    
+    
     def _render_frame(self):
         if self.window is None and self.render_mode == "human":
             pygame.init()
