@@ -10,26 +10,36 @@ class GridWorldEnv(gym.Env):
     def __init__(self, render_mode='human', size = 7):
         self.size = size  # The size of the square grid
         self.window_size = 512  # The size of the PyGame window
-        self.turtle0 = turtle(1, self.size)
-        self.turtle1 = turtle(2, self.size)
-        self.target0 = workStation(1, self.size)
-        self.chargingStation = ChargingStation(self.size)
+        self.numOfTurtles = 4
+        self.numOfTargets = 3
+        self.numOfChargingStations = 2
+        self.turtles : list[Turtle] = []
+        self.targets : list[WorkStation] = []
+        self.chargingStations : list[ChargingStation] = []
+        self.observation_space = spaces.Dict({})
+        for i in range(self.numOfTurtles):
+            self.turtles.append(Turtle(i, self.size))
+            self.observation_space["agent" + str(i)] = spaces.Box(low=np.array([0, 0, 0, 1]), high=np.array([size-1, size-1, 100, 5]), dtype=int)
+        for i in range(self.numOfTargets):
+            self.targets.append(WorkStation(i, self.size))
+            self.observation_space["target" + str(i)] = spaces.Box(low=np.array([0, 0, 0,]), high=np.array([size-1, size-1, 5]), dtype=int)
+        for i in range(self.numOfChargingStations):
+            self.chargingStations.append(ChargingStation(self.size))
+            self.observation_space["charging_station" + str(i)] = spaces.Box(0, size - 1, shape=(2,), dtype=int)
         # Observations are dictionaries with the agent's and the target's location.
         # Each location is encoded as an element of {0, ..., `size`}^2, i.e. MultiDiscrete([size, size]).
-        #"agent": spaces.Box(low=np.array([0, 0, 0, 1]), high=np.array([size-1, size-1, 100, 5]), dtype=int), 
-        self.observation_space = spaces.Dict(
-            {
-                "agent": spaces.Box(low=np.array([0, 0, 0, 1]), high=np.array([size-1, size-1, 100, 5]), dtype=int), 
-                "agent1": spaces.Box(low=np.array([0, 0, 0, 1]), high=np.array([size-1, size-1, 100, 5]), dtype=int), 
-                "target": spaces.Box(low=np.array([0, 0, 0,]), high=np.array([size-1, size-1, 5]), dtype=int), #DStructure [0]and[1] is xy pos [2] is the type of "lego" bricks needed 
-                "charging_station": spaces.Box(0, size - 1, shape=(2,), dtype=int),
-            }
-        )
+        #"agent": spaces.Box(low=np.array([0, 0, 0, 1]), high=np.array([size-1, size-1, 100, 5]), dtype=int),
 
+        self.turtle0 = self.turtles[0]
+        self.turtle1 = self.turtles[1]
+        self.target0 = self.targets[0]
+        self.chargingStation = self.chargingStations[0]        
         #We have 4 actions, corresponding to "right", "up", "left", "down", "right"
-        actionSpaceArray = [4]
+        actionSpaceArray = []
+        for i in range(self.numOfTurtles):
+            actionSpaceArray.append(5)
         #self.action_space = spaces.MultiDiscrete(actionSpaceArray)
-        self.action_space = spaces.Discrete(4)
+        self.action_space = spaces.MultiDiscrete(actionSpaceArray)
         """
         The following dictionary maps abstract actions from `self.action_space` to 
         the direction we will walk in if that action is taken.
@@ -63,8 +73,14 @@ class GridWorldEnv(gym.Env):
         self.clock = None
 
     def _get_obs(self):
-        return {"agent": self.turtle0.getState(), "agent1": self.turtle1.getState(),
-        "target": self.target0.getState(), "charging_station": self.chargingStation.location}
+        obs = {}
+        for i in range(self.numOfTurtles):
+            obs["agent" + str(i)] = self.turtles[i].getState()
+        for i in range(self.numOfTargets):
+            obs["target" + str(i)] = self.targets[i].getState()
+        for i in range(self.numOfChargingStations):
+            obs["charging_station" + str(i)] = self.chargingStations[i].location
+        return obs
 
     def _get_info(self):
         return {
@@ -76,13 +92,15 @@ class GridWorldEnv(gym.Env):
     def reset(self):
         # We need the following line to seed self.np_random
         #super().reset()
-
         # Choose the agent's location uniformly at random
         # self._agent_location = [random.randrange(1,50)*10,random.randrange(1,50)*10]
         self.turtle0.reset()
-        self.turtle1.reset()
-        self.target0.reset()
+        #self.turtle1.reset()
+        self.turtles[1].reset()
+        self.targets[0].reset()
+        self.targets[1].reset()
         self.chargingStation.reset()
+        #self.chargingStation[1].reset()
         # We will sample the target's location randomly until it does not coincide with the agent's location
         self.target0.location = self.turtle0.location
         while manhattenDist(self.turtle0.location, self.target0.location) < 2 :
@@ -102,8 +120,10 @@ class GridWorldEnv(gym.Env):
         # Map the action (element of {0,1,2,3}) to the direction we walk in
         oldDist = manhattenDist(self.turtle0.location, self.target0.location)
         oldLoc = self.turtle0.location
-        self.turtle0.move(action)
-        self.turtle1.move(action)
+        #self.turtle0.move(action)
+        #self.turtle1.move(action)
+        for idx, turtle in enumerate(self.turtles):
+            turtle.move(action[idx])
         # We use `np.clip` to make sure we don't leave the grid
         newDist = manhattenDist(self.turtle0.location, self.target0.location)
         # An episode is done iff the agent has reached the target
@@ -156,7 +176,7 @@ class GridWorldEnv(gym.Env):
             return self._render_frame()
         return self._render_frame()
 
-    def _renderRobot(self, robot : turtle, canvas, pix_square_size):
+    def _renderRobot(self, robot : Turtle, canvas, pix_square_size):
         color = (35,255,35) if robot.battery > robot.lowBattery else (255,35,35)
         pygame.draw.rect(
             canvas,
@@ -174,12 +194,12 @@ class GridWorldEnv(gym.Env):
             pix_square_size / 3,
         )
 
-    def _renderTarget(self, target : workStation, canvas, pix_square_size):
+    def _renderTarget(self, target : WorkStation, canvas, pix_square_size):
         pygame.draw.rect(
             canvas,
             (255, 0, 0),
             pygame.Rect(
-                ((self.target0.location[0]) * pix_square_size ,(self.target0.location[1]) * pix_square_size),
+                ((target.location[0]) * pix_square_size ,(target.location[1]) * pix_square_size),
                 (pix_square_size, pix_square_size),
             ),
         )
@@ -188,7 +208,7 @@ class GridWorldEnv(gym.Env):
             canvas,
             (30, 230, 30),
             pygame.Rect(
-                ((self.chargingStation.location[0]) * pix_square_size ,(self.chargingStation.location[1]) * pix_square_size),
+                ((chargingStation.location[0]) * pix_square_size ,(chargingStation.location[1]) * pix_square_size),
                 (pix_square_size, pix_square_size),
             ),
         )
@@ -206,13 +226,14 @@ class GridWorldEnv(gym.Env):
             self.window_size / self.size
         )  # The size of a single grid square in pixels
         # First we draw the target
+        print("\nTarget locations:")
+        for targets in self.targets:
+            self._renderTarget(targets, canvas, pix_square_size)
+        for chargingStation in self.chargingStations:
+            self._renderChargingStation(chargingStation, canvas, pix_square_size)
+        for turtle in self.turtles:
+            self._renderRobot(turtle, canvas, pix_square_size)
 
-        
-        self._renderTarget(self.target0,canvas,pix_square_size)
-        self._renderChargingStation(self.chargingStation,canvas,pix_square_size)
-        
-        self._renderRobot(self.turtle0, canvas, pix_square_size)
-        self._renderRobot(self.turtle1, canvas, pix_square_size)
         # Finally, add some gridlines
         for x in range(self.size + 1):
             pygame.draw.line(
