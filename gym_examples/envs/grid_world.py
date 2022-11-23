@@ -10,6 +10,7 @@ class GridWorldEnv(gym.Env):
     def __init__(self, render_mode='human', size = 7):
         self.size = size  # The size of the square grid
         self.window_size = 512  # The size of the PyGame window
+        self.pixSize = self.window_size / self.size
         self.numOfTurtles = 4
         self.numOfTargets = 3
         self.numOfChargingStations = 2
@@ -164,52 +165,55 @@ class GridWorldEnv(gym.Env):
             return self._render_frame()
         return self._render_frame()
 
-    def _drawTextCentered(self, surface, text, text_size, loc, size, color):
+    def _drawTextCentered(self, surface, text, loc, color):
         font = pygame.freetype.SysFont("monospace", 0) 
-        x = (loc[0]*size)+45
-        y = (loc[1]*size)+45
+        x = (loc[0]*self.pixSize)+self.pixSize/2
+        y = (loc[1]*self.pixSize)+self.pixSize/2
         pos = (x, y)
         text_rect = font.get_rect(text, size = 50)
         text_rect.center = pos
         font.render_to(surface, text_rect, text, color, size = 50)
-
-    def _renderRobot(self, robot : Turtle, canvas, pix_square_size):
+    def _renderRobot(self, robot : Turtle, canvas):
         color = (35,255,35) if robot.battery > robot.lowBattery else (255,35,35)
         pygame.draw.rect(
             canvas,
             color,
             pygame.Rect(
-                ((robot.location[0]+0.8) * pix_square_size ,((robot.location[1]+1-(robot.battery/100)) * pix_square_size)),
-                (pix_square_size*0.2, pix_square_size*robot.battery/100),
+                ((robot.location[0]+0.8) * self.pixSize ,((robot.location[1]+1-(robot.battery/100)) * self.pixSize)),
+                (self.pixSize*0.2, self.pixSize*robot.battery/100),
             ),
         )
         # Now we draw the agent
         pygame.draw.circle(
             canvas,
             (0, 0, 255),
-            (robot.location + 0.5) * pix_square_size,
-            pix_square_size / 3,
+            (robot.location + 0.5) * self.pixSize,
+            self.pixSize / 3,
         )
+        self._drawTextCentered(canvas, str(robot.type), robot.location, (0,0,0))
 
-    def _renderTarget(self, target : WorkStation, canvas, pix_square_size):
+    def _renderTarget(self, target : WorkStation, canvas):
         pygame.draw.rect(
             canvas,
             (255, 0, 0),
             pygame.Rect(
-                ((target.location[0]) * pix_square_size ,(target.location[1]) * pix_square_size),
-                (pix_square_size, pix_square_size),
+                ((target.location[0]) * self.pixSize ,(target.location[1]) * self.pixSize),
+                (self.pixSize, self.pixSize),
             ),
         )
-    def _renderChargingStation(self, chargingStation : ChargingStation, canvas, pix_square_size):
+        self._drawTextCentered(canvas, str(target.type), target.location, (0,0,0))
+
+    def _renderChargingStation(self, chargingStation : ChargingStation, canvas):
         pygame.draw.rect(
             canvas,
             (30, 230, 30),
             pygame.Rect(
-                ((chargingStation.location[0]) * pix_square_size ,(chargingStation.location[1]) * pix_square_size),
-                (pix_square_size, pix_square_size),
+                ((chargingStation.location[0]) * self.pixSize ,(chargingStation.location[1]) * self.pixSize),
+                (self.pixSize, self.pixSize),
             ),
         )
-        self._drawTextCentered(canvas, "C", 40, chargingStation.location, pix_square_size, (0,0,0))
+        
+        self._drawTextCentered(canvas, "C", chargingStation.location, (0,0,0))
     
     
     def _render_frame(self):
@@ -222,31 +226,28 @@ class GridWorldEnv(gym.Env):
 
         canvas = pygame.Surface((self.window_size, self.window_size))
         canvas.fill((255, 255, 255))
-        pix_square_size = (
-            self.window_size / self.size
-        )  # The size of a single grid square in pixels
         # First we draw the target
         for targets in self.targets:
-            self._renderTarget(targets, canvas, pix_square_size)
+            self._renderTarget(targets, canvas)
         for chargingStation in self.chargingStations:
-            self._renderChargingStation(chargingStation, canvas, pix_square_size)
+            self._renderChargingStation(chargingStation, canvas)
         for turtle in self.turtles:
-            self._renderRobot(turtle, canvas, pix_square_size)
+            self._renderRobot(turtle, canvas)
 
         # Finally, add some gridlines
         for x in range(self.size + 1):
             pygame.draw.line(
                 canvas,
                 0,
-                (0, pix_square_size * x),
-                (self.window_size, pix_square_size * x),
+                (0, self.pixSize * x),
+                (self.window_size, self.pixSize * x),
                 width=3,
             )
             pygame.draw.line(
                 canvas,
                 0,
-                (pix_square_size * x, 0),
-                (pix_square_size * x, self.window_size),
+                (self.pixSize * x, 0),
+                (self.pixSize * x, self.window_size),
                 width=3,
             )
 
