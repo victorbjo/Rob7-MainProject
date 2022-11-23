@@ -22,8 +22,9 @@ class Turtle():
         self.battery -= 1
         if self.battery < 0:
             self.battery = 0
-    def reset(self):
-        self.location = [random.randrange(0,self.size),random.randrange(0,self.size)]
+    def reset(self, spawnAbleLocations):
+        randNum = random.randrange(0,len(spawnAbleLocations))
+        self.location = spawnAbleLocations.pop(randNum)
         self.battery = random.randrange(20,60)
     def getState(self):
         return [self.location[0],self.location[1], self.battery, self.type]
@@ -33,10 +34,11 @@ class WorkStation():
         self.size = size
         self.type = type
         self.location = [random.randrange(0,self.size),random.randrange(0,self.size)]
-    def reset(self):
-        self.getNewLoc()
-    def getNewLoc(self):
-        self.location = [random.randrange(0,self.size),random.randrange(0,self.size)]
+    def reset(self, spawnAbleLocations):
+        self.getNewLoc(spawnAbleLocations)
+    def getNewLoc(self, spawnAbleLocations):
+        randNum = random.randrange(0,len(spawnAbleLocations))
+        self.location = spawnAbleLocations.pop(randNum)
     def getState(self):
         return [self.location[0],self.location[1], self.type]
 class ChargingStation(WorkStation):

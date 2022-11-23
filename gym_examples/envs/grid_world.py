@@ -13,6 +13,7 @@ class GridWorldEnv(gym.Env):
         self.numOfTurtles = 4
         self.numOfTargets = 3
         self.numOfChargingStations = 2
+        self.spawnableSpace = []
         self.turtles : list[Turtle] = []
         self.targets : list[WorkStation] = []
         self.chargingStations : list[ChargingStation] = []
@@ -26,6 +27,10 @@ class GridWorldEnv(gym.Env):
         for i in range(self.numOfChargingStations):
             self.chargingStations.append(ChargingStation(self.size))
             self.observation_space["charging_station" + str(i)] = spaces.Box(0, size - 1, shape=(2,), dtype=int)
+        
+        for x in range(size):
+            for y in range(size):
+                self.spawnableSpace.append([x,y])
         # Observations are dictionaries with the agent's and the target's location.
         # Each location is encoded as an element of {0, ..., `size`}^2, i.e. MultiDiscrete([size, size]).
         #"agent": spaces.Box(low=np.array([0, 0, 0, 1]), high=np.array([size-1, size-1, 100, 5]), dtype=int),
@@ -89,24 +94,14 @@ class GridWorldEnv(gym.Env):
             )
         }
 
-    def reset(self):
-        # We need the following line to seed self.np_random
-        #super().reset()
-        # Choose the agent's location uniformly at random
-        # self._agent_location = [random.randrange(1,50)*10,random.randrange(1,50)*10]
-        self.turtle0.reset()
-        #self.turtle1.reset()
-        self.turtles[1].reset()
-        self.targets[0].reset()
-        self.targets[1].reset()
-        self.chargingStation.reset()
-        #self.chargingStation[1].reset()
-        # We will sample the target's location randomly until it does not coincide with the agent's location
-        self.target0.location = self.turtle0.location
-        while manhattenDist(self.turtle0.location, self.target0.location) < 2 :
-            self.target0.getNewLoc()
-        while manhattenDist(self.chargingStation.location, self.target0.location) < 2 or manhattenDist(self.chargingStation.location, self.turtle0.location) < 1:
-            self.chargingStation.reset()
+    def reset(self): 
+        a  = self.spawnableSpace.copy()
+        for turtle in self.turtles:
+            turtle.reset(a)
+        for target in self.targets:
+            target.reset(a)
+        for chargingStation in self.chargingStations:
+            chargingStation.reset(a)
         observation = self._get_obs()
         info = self._get_info()
 
@@ -226,7 +221,6 @@ class GridWorldEnv(gym.Env):
             self.window_size / self.size
         )  # The size of a single grid square in pixels
         # First we draw the target
-        print("\nTarget locations:")
         for targets in self.targets:
             self._renderTarget(targets, canvas, pix_square_size)
         for chargingStation in self.chargingStations:
