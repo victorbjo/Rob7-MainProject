@@ -49,6 +49,7 @@ class WorkStation():
         self.location = [random.randrange(0,self.size),random.randrange(0,self.size)]
         self.taskCompleted = False
     def reset(self, spawnAbleLocations):
+        self.taskCompleted = False
         self.getNewLoc(spawnAbleLocations)
     def getNewLoc(self, spawnAbleLocations):
         randNum = random.randrange(0,len(spawnAbleLocations))
