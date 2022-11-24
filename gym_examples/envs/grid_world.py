@@ -147,44 +147,54 @@ class GridWorldEnv(gym.Env):
                         if target.taskCompleted is False:
                             reward += 2
                     else:
-                        reward -= 3
+                        if target.taskCompleted is False:
+                            reward -= 10
+                            pass
 
             #Penalize if turtle is driving without a task
             if turtleHasTask is False and turtle.battery > turtle.lowBattery:
-                if turtle.location == turtle.oldLoc:
+                if equal(turtle.location, turtle.oldLoc):
                     reward +1
                 else:
                     reward -= 1
+                    pass
             if turtleHasTask and equal(turtle.location, turtle.oldLoc):
-                reward -= 10
+                #reward -= 10
+                pass
             #Check if turtle reaches target
             for target in self.targets:
                 if equal(turtle.location, target.location):
                     if turtle.type == target.type and target.taskCompleted == False and turtle.battery > turtle.lowBattery:
-                        target.taskCompleted
-                        reward += 15
+                        target.taskCompleted = True
+                        reward += 100
                     else:
-                        reward -= 10
+                        #reward -= 10
+                        pass
             
             #Check if turtle reaches charging station
+            #print("Turtle location: ", turtle.location)
             for chargingStation in self.chargingStations:
                 if equal(turtle.location, chargingStation.location):
+                    #print("Turtle is on charging station")
                     if turtle.battery < turtle.lowBattery:
-                        turtle.battery = 100
-                        reward += 15
+                        #print("HEYROOKASKJASDInj")
+                        turtle.charge()
+                        reward += 25
                     else:
-                        reward -= 15
+                        #reward -= 15
+                        pass
 
         if any(turtle.battery <= 0 for turtle in self.turtles):
             reward -= 100
             return self._get_obs(), reward, True, self._get_info()
         
         if any(equal(turtle.location, turtle2.location) and turtle != turtle2 for turtle in self.turtles for turtle2 in self.turtles):
-            reward -= 101
+            reward -= 100
             return self._get_obs(), reward, True, self._get_info()
 
         if all(target.taskCompleted for target in self.targets):
             reward += 100
+            print("FUCK YEAH")
             return self._get_obs(), reward, True, self._get_info()
         
 
