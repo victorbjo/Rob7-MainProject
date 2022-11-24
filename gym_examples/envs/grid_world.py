@@ -154,6 +154,8 @@ class GridWorldEnv(gym.Env):
                     reward +1
                 else:
                     reward -= 10
+            if turtleHasTask and equal(turtle.location, turtle.oldLoc):
+                reward -= 10
             #Check if turtle reaches target
             for target in self.targets:
                 if equal(turtle.location, target.location):
