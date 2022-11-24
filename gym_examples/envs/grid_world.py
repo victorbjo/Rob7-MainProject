@@ -164,7 +164,7 @@ class GridWorldEnv(gym.Env):
                         target.taskCompleted = True
                         reward += 100
                     else:
-                        #reward -= 10
+                        reward -= 10
                         pass
             
             #Check if turtle reaches charging station
@@ -175,7 +175,7 @@ class GridWorldEnv(gym.Env):
                     if turtle.battery < turtle.lowBattery:
                         #print("HEYROOKASKJASDInj")
                         turtle.charge()
-                        reward += 25
+                        reward += 40
                     else:
                         reward -= 15
                         pass
@@ -183,9 +183,9 @@ class GridWorldEnv(gym.Env):
             for chargingStation in self.chargingStations:
                 if manhattenDist(turtle.location, chargingStation.location) < manhattenDist(turtle.oldLoc, chargingStation.location):
                     if turtle.battery < turtle.lowBattery:
-                        reward += 10
+                        reward += 15
                     else:
-                        reward -= 10
+                        reward -= 15
                         
 
         if any(turtle.battery <= 0 for turtle in self.turtles):
