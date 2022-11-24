@@ -21,7 +21,7 @@ class GridWorldEnv(gym.Env):
         self.observation_space = spaces.Dict({})
         for i in range(self.numOfTurtles):
             self.turtles.append(Turtle(i, self.size))
-            self.observation_space["agent" + str(i)] = spaces.Box(low=np.array([0, 0, 0, 1]), high=np.array([size-1, size-1, 100, 5]), dtype=int)
+            self.observation_space["agent" + str(i)] = spaces.Box(low=np.array([0, 0, 0, 0]), high=np.array([size-1, size-1, 100, 5]), dtype=int)
         for i in range(self.numOfTargets):
             self.targets.append(WorkStation(i, self.size))
             self.observation_space["target" + str(i)] = spaces.Box(low=np.array([0, 0, 0,]), high=np.array([size-1, size-1, 5]), dtype=int)
@@ -141,10 +141,11 @@ class GridWorldEnv(gym.Env):
             turtleHasTask = False
             for target in self.targets:
                 if turtle.battery > turtle.lowBattery and turtle.type == target.type:
-                    turtleHasTask = True
+                    if target.taskCompleted == False:
+                        turtleHasTask = True
                     if manhattenDist(turtle.location, target.location) < manhattenDist(turtle.oldLoc, target.location):
                         if target.taskCompleted is False:
-                            reward += 1
+                            reward += 2
                     else:
                         reward -= 3
 
@@ -153,7 +154,7 @@ class GridWorldEnv(gym.Env):
                 if turtle.location == turtle.oldLoc:
                     reward +1
                 else:
-                    reward -= 10
+                    reward -= 1
             if turtleHasTask and equal(turtle.location, turtle.oldLoc):
                 reward -= 10
             #Check if turtle reaches target
