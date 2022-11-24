@@ -20,6 +20,8 @@ class Turtle():
         direction = self._action_to_direction[action]
         self.location = np.clip(self.location + direction, 0, self.size - 1)
         self.battery -= 1
+        if action == 4:
+            self.battery += 1
         if self.battery < 0:
             self.battery = 0
     def reset(self, spawnAbleLocations):
@@ -34,6 +36,7 @@ class WorkStation():
         self.size = size
         self.type = type
         self.location = [random.randrange(0,self.size),random.randrange(0,self.size)]
+        self.taskCompleted = False
     def reset(self, spawnAbleLocations):
         self.getNewLoc(spawnAbleLocations)
     def getNewLoc(self, spawnAbleLocations):

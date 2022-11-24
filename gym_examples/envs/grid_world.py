@@ -11,8 +11,8 @@ class GridWorldEnv(gym.Env):
         self.size = size  # The size of the square grid
         self.window_size = 512  # The size of the PyGame window
         self.pixSize = self.window_size / self.size
-        self.numOfTurtles = 4
-        self.numOfTargets = 3
+        self.numOfTurtles = 2
+        self.numOfTargets = 2
         self.numOfChargingStations = 2
         self.spawnableSpace = []
         self.turtles : list[Turtle] = []
@@ -28,14 +28,12 @@ class GridWorldEnv(gym.Env):
         for i in range(self.numOfChargingStations):
             self.chargingStations.append(ChargingStation(self.size))
             self.observation_space["charging_station" + str(i)] = spaces.Box(0, size - 1, shape=(2,), dtype=int)
-        
         for x in range(size):
             for y in range(size):
                 self.spawnableSpace.append([x,y])
         # Observations are dictionaries with the agent's and the target's location.
         # Each location is encoded as an element of {0, ..., `size`}^2, i.e. MultiDiscrete([size, size]).
         #"agent": spaces.Box(low=np.array([0, 0, 0, 1]), high=np.array([size-1, size-1, 100, 5]), dtype=int),
-
         self.turtle0 = self.turtles[0]
         self.turtle1 = self.turtles[1]
         self.target0 = self.targets[0]
@@ -112,6 +110,26 @@ class GridWorldEnv(gym.Env):
         return observation
 
     def step(self, action):
+
+
+        #Terminate with low rewards if
+        #1. One turtle is dead
+        #2. Two turtles collide
+
+        #Terminate with high rewards if
+        #1. All targets have been met
+
+        #General positive reward if
+        #1. One turtle is closer to the target or charging station
+        #2. Turtle is standing still 
+
+        #General negative reward if
+        #1. One turtle is further away from the target and battery station
+        #2. Turtle is driving without a target
+        #3. Turtle is standing still and battery is low or target is available
+        #4. Turtle is standing still on charging station with full battery
+
+
         oldDist = manhattenDist(self.turtle0.location, self.target0.location)
         oldLoc = self.turtle0.location
         for idx, turtle in enumerate(self.turtles):
