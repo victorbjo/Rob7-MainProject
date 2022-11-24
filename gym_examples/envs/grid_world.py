@@ -11,8 +11,8 @@ class GridWorldEnv(gym.Env):
         self.size = size  # The size of the square grid
         self.window_size = 512  # The size of the PyGame window
         self.pixSize = self.window_size / self.size
-        self.numOfTurtles = 2
-        self.numOfTargets = 2
+        self.numOfTurtles = 1
+        self.numOfTargets = 1
         self.numOfChargingStations = 1
         self.spawnableSpace = []
         self.turtles : list[Turtle] = []
@@ -33,11 +33,7 @@ class GridWorldEnv(gym.Env):
                 self.spawnableSpace.append([x,y])
         # Observations are dictionaries with the agent's and the target's location.
         # Each location is encoded as an element of {0, ..., `size`}^2, i.e. MultiDiscrete([size, size]).
-        #"agent": spaces.Box(low=np.array([0, 0, 0, 1]), high=np.array([size-1, size-1, 100, 5]), dtype=int),
-        self.turtle0 = self.turtles[0]
-        self.turtle1 = self.turtles[1]
-        self.target0 = self.targets[0]
-        self.chargingStation = self.chargingStations[0]        
+        #"agent": spaces.Box(low=np.array([0, 0, 0, 1]), high=np.array([size-1, size-1, 100, 5]), dtype=int),  
         #We have 4 actions, corresponding to "right", "up", "left", "down", "right"
         actionSpaceArray = []
         for i in range(self.numOfTurtles):
@@ -89,7 +85,7 @@ class GridWorldEnv(gym.Env):
     def _get_info(self):
         return {
             "distance": np.linalg.norm(
-                self.turtle0.location[0] - self.target0.location[0]
+                self.turtles[0].location[0] - self.targets[0].location[0]
             )
         }
 
@@ -145,7 +141,7 @@ class GridWorldEnv(gym.Env):
                         turtleHasTask = True
                     if manhattenDist(turtle.location, target.location) < manhattenDist(turtle.oldLoc, target.location):
                         if target.taskCompleted is False:
-                            reward += 2
+                            reward += 10
                     else:
                         if target.taskCompleted is False:
                             reward -= 10
@@ -156,10 +152,10 @@ class GridWorldEnv(gym.Env):
                 if equal(turtle.location, turtle.oldLoc):
                     reward +1
                 else:
-                    reward -= 1
+                    reward -= 10
                     pass
             if turtleHasTask and equal(turtle.location, turtle.oldLoc):
-                #reward -= 10
+                reward -= 10
                 pass
             #Check if turtle reaches target
             for target in self.targets:
@@ -181,8 +177,16 @@ class GridWorldEnv(gym.Env):
                         turtle.charge()
                         reward += 25
                     else:
-                        #reward -= 15
+                        reward -= 15
                         pass
+
+            for chargingStation in self.chargingStations:
+                if manhattenDist(turtle.location, chargingStation.location) < manhattenDist(turtle.oldLoc, chargingStation.location):
+                    if turtle.battery < turtle.lowBattery:
+                        reward += 10
+                    else:
+                        reward -= 10
+                        
 
         if any(turtle.battery <= 0 for turtle in self.turtles):
             reward -= 100
