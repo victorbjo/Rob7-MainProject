@@ -181,11 +181,11 @@ class GridWorldEnv(gym.Env):
                         pass
 
             for chargingStation in self.chargingStations:
-                if manhattenDist(turtle.location, chargingStation.location) < manhattenDist(turtle.oldLoc, chargingStation.location):
-                    if turtle.battery < turtle.lowBattery:
+                if turtle.battery < turtle.lowBattery:
+                    if manhattenDist(turtle.location, chargingStation.location) < manhattenDist(turtle.oldLoc, chargingStation.location):
                         reward += 15
                     else:
-                        reward -= 15
+                        reward -= 20
                         
 
         if any(turtle.battery <= 0 for turtle in self.turtles):
@@ -198,7 +198,6 @@ class GridWorldEnv(gym.Env):
 
         if all(target.taskCompleted for target in self.targets):
             reward += 100
-            print("FUCK YEAH")
             return self._get_obs(), reward, True, self._get_info()
         
 

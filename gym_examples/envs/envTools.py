@@ -40,7 +40,11 @@ class Turtle():
         self._battery = 100
         self.battery = int(self._battery)
     def getState(self):
-        return [self.location[0],self.location[1], self.battery, self.type]
+        if self.battery < self.lowBattery:
+            battery = 0
+        else:
+            battery = 100
+        return [self.location[0],self.location[1], battery, self.type]
             
 class WorkStation():
     def __init__(self, type, size = 6):
