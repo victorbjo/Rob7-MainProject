@@ -128,52 +128,66 @@ class GridWorldEnv(gym.Env):
         #2. Turtle is driving without a target
         #3. Turtle is standing still and battery is low or target is available
         #4. Turtle is standing still on charging station with full battery
-
-
-        oldDist = manhattenDist(self.turtle0.location, self.target0.location)
-        oldLoc = self.turtle0.location
+        terminated = False
+        reward = 0
+        #Movement of turtles
         for idx, turtle in enumerate(self.turtles):
             turtle.move(action[idx])
-        newDist = manhattenDist(self.turtle0.location, self.target0.location)
-        terminated = np.array_equal(self.turtle0.location, self.target0.location)
 
-        highest_distance = (self.size -1) * np.sqrt(2) 
+        #Check if robot moves closer to target
+        for turtle in self.turtles:
 
-        oldBatDist = manhattenDist(oldLoc, self.chargingStation.location)
-        newBatDist = manhattenDist(self.turtle0.location, self.chargingStation.location)
-        if newDist < oldDist:
-            reward = 5
-        elif newDist == oldDist:
-            reward = -3
-        else:
-            reward = -15
-        if terminated and self.turtle0.battery > self.turtle0.lowBattery:
-            reward = 50
-        elif terminated and self.turtle0.battery <= self.turtle0.lowBattery:
-            reward = -25
-            terminated = False
-        elif terminated:
-            reward = 0
-        if self.turtle0.battery <= 0:
-            reward = -100
-            terminated = True
-        if self.turtle0.battery < 2:
-            if newBatDist < oldBatDist:
-                reward = 4
-            elif newBatDist == oldBatDist:
-                reward = -3
-            else:
-                reward = -(25 * (2-self.turtle0.battery))
-        if np.array_equal(self.turtle0.location, self.chargingStation.location) and self.turtle0.battery < self.turtle0.lowBattery:
-            self.turtle0.battery = 100
-            reward = 10
+            #Check if turtle driving towards target
+            turtleHasTask = False
+            for target in self.targets:
+                if turtle.battery > turtle.lowBattery and turtle.type == target.type:
+                    turtleHasTask = True
+                    if manhattenDist(turtle.location, target.location) < manhattenDist(turtle.oldLoc, target.location):
+                        if target.taskCompleted is False:
+                            reward += 1
+                    else:
+                        reward -= 3
+
+            #Penalize if turtle is driving without a task
+            if turtleHasTask is False and turtle.battery > turtle.lowBattery:
+                if turtle.location == turtle.oldLoc:
+                    reward +1
+                else:
+                    reward -= 10
+            #Check if turtle reaches target
+            for target in self.targets:
+                if turtle.location == target.location:
+                    if turtle.type == target.type and target.taskCompleted == False and turtle.battery > turtle.lowBattery:
+                        target.taskCompleted
+                        reward += 15
+                    else:
+                        reward -= 10
+            
+            #Check if turtle reaches charging station
+            for chargingStation in self.chargingStations:
+                if turtle.location == chargingStation.location:
+                    if turtle.battery < turtle.lowBattery:
+                        turtle.battery = 100
+                        reward += 15
+                    else:
+                        reward -= 15
+
+        if any(turtle.battery <= 0 for turtle in self.turtles):
+            reward -= 100
+            return self._get_obs(), reward, True, self._get_info()
+        
+        if any(turtle.location == turtle2.location for turtle in self.turtles for turtle2 in self.turtles if turtle != turtle2):
+            reward -= 100
+            return self._get_obs(), reward, True, self._get_info()
+
+        if all(target.taskCompleted for target in self.targets):
+            reward += 100
+            return self._get_obs(), reward, True, self._get_info()
+        
+
         observation = self._get_obs()
         info = self._get_info()
 
-        if self.render_mode == "human":
-            pass
-            #self._render_frame()
-        #print(observation)
         return observation, reward, terminated, info
 
 

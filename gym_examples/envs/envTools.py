@@ -8,7 +8,9 @@ class Turtle():
         self.type = type
         self.location = [random.randrange(0,self.size),random.randrange(0,self.size)]
         self.battery = random.randrange(20,60)
+        self._battery = self.battery
         self.lowBattery = 30
+        self.oldLoc = self.location
         self._action_to_direction = {
             0: np.array([1, 0]),
             1: np.array([0, 1]),
@@ -17,11 +19,13 @@ class Turtle():
             4: np.array([0, 0]),
         }
     def move(self, action):
+        self.oldLoc = self.location
         direction = self._action_to_direction[action]
         self.location = np.clip(self.location + direction, 0, self.size - 1)
-        self.battery -= 1
+        self._battery -= 1
         if action == 4:
-            self.battery += 1
+            self._battery += 0.9
+        self.battery = int(self._battery)
         if self.battery < 0:
             self.battery = 0
     def reset(self, spawnAbleLocations):
