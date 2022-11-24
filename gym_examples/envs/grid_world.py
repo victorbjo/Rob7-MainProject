@@ -13,7 +13,7 @@ class GridWorldEnv(gym.Env):
         self.pixSize = self.window_size / self.size
         self.numOfTurtles = 2
         self.numOfTargets = 2
-        self.numOfChargingStations = 2
+        self.numOfChargingStations = 1
         self.spawnableSpace = []
         self.turtles : list[Turtle] = []
         self.targets : list[WorkStation] = []
@@ -156,7 +156,7 @@ class GridWorldEnv(gym.Env):
                     reward -= 10
             #Check if turtle reaches target
             for target in self.targets:
-                if turtle.location == target.location:
+                if equal(turtle.location, target.location):
                     if turtle.type == target.type and target.taskCompleted == False and turtle.battery > turtle.lowBattery:
                         target.taskCompleted
                         reward += 15
@@ -165,7 +165,7 @@ class GridWorldEnv(gym.Env):
             
             #Check if turtle reaches charging station
             for chargingStation in self.chargingStations:
-                if turtle.location == chargingStation.location:
+                if equal(turtle.location, chargingStation.location):
                     if turtle.battery < turtle.lowBattery:
                         turtle.battery = 100
                         reward += 15
@@ -176,8 +176,8 @@ class GridWorldEnv(gym.Env):
             reward -= 100
             return self._get_obs(), reward, True, self._get_info()
         
-        if any(turtle.location == turtle2.location for turtle in self.turtles for turtle2 in self.turtles if turtle != turtle2):
-            reward -= 100
+        if any(equal(turtle.location, turtle2.location) and turtle != turtle2 for turtle in self.turtles for turtle2 in self.turtles):
+            reward -= 101
             return self._get_obs(), reward, True, self._get_info()
 
         if all(target.taskCompleted for target in self.targets):
