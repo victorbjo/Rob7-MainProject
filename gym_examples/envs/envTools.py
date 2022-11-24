@@ -3,6 +3,7 @@ import random
 def manhattenDist(robot, goal):
     return abs(robot[0] - goal[0]) + abs(robot[1] - goal[1])
 def equal(a, b):
+    return manhattenDist(a, b) == 0
     return all(aa == bb for aa in a for bb in b)
 class Turtle():
     def __init__(self, type, size = 6):
@@ -35,6 +36,9 @@ class Turtle():
         self.location = spawnAbleLocations.pop(randNum)
         self.battery = random.randrange(20,60)
         self._battery = self.battery
+    def charge(self):
+        self._battery = 100
+        self.battery = int(self._battery)
     def getState(self):
         return [self.location[0],self.location[1], self.battery, self.type]
             
