@@ -11,8 +11,8 @@ class GridWorldEnv(gym.Env):
         self.size = size  # The size of the square grid
         self.window_size = 512  # The size of the PyGame window
         self.pixSize = self.window_size / self.size
-        self.numOfTurtles = 1
-        self.numOfTargets = 1
+        self.numOfTurtles = 2
+        self.numOfTargets = 2
         self.numOfChargingStations = 1
         self.spawnableSpace = []
         self.turtles : list[Turtle] = []
@@ -187,6 +187,8 @@ class GridWorldEnv(gym.Env):
                     else:
                         reward -= 20
                         
+        if any(manhattenDist(turtle.location, turtle2.location) == 1 and turtle != turtle2 for turtle in self.turtles for turtle2 in self.turtles):
+            reward -= 100
 
         if any(turtle.battery <= 0 for turtle in self.turtles):
             reward -= 100
