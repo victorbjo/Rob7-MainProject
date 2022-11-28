@@ -27,7 +27,7 @@ class Turtle():
         self.location = np.clip(self.location + direction, 0, self.size - 1)
         self._battery -= 1
         if action == 4:
-            self._battery += 0.9
+            self._battery += 0.95
         self.battery = int(self._battery)
         if self.battery < 0:
             self.battery = 0

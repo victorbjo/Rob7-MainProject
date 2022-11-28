@@ -7,7 +7,8 @@ from .envTools import *
 class GridWorldEnv(gym.Env):
     metadata = {"render_modes": ["human", "rgb_array"], "render_fps": 4}
 
-    def __init__(self, render_mode='human', size = 7):
+    def __init__(self, render_mode='human', size = 6):
+        self.episodeLength = 0
         self.size = size  # The size of the square grid
         self.window_size = 512  # The size of the PyGame window
         self.pixSize = self.window_size / self.size
@@ -90,6 +91,7 @@ class GridWorldEnv(gym.Env):
         }
 
     def reset(self): 
+        self.episodeLength = 0
         a  = self.spawnableSpace.copy()
         for turtle in self.turtles:
             turtle.reset(a)
@@ -106,7 +108,7 @@ class GridWorldEnv(gym.Env):
         return observation
 
     def step(self, action):
-
+        self.episodeLength += 1
 
         #Terminate with low rewards if
         #1. One turtle is dead
@@ -132,80 +134,111 @@ class GridWorldEnv(gym.Env):
 
         #Check if robot moves closer to target
         for turtle in self.turtles:
-
+            turtleReward = 0
             #Check if turtle driving towards target
             turtleHasTask = False
+            '''
             for target in self.targets:
                 if turtle.battery > turtle.lowBattery and turtle.type == target.type:
                     if target.taskCompleted == False:
                         turtleHasTask = True
                     if manhattenDist(turtle.location, target.location) < manhattenDist(turtle.oldLoc, target.location):
                         if target.taskCompleted is False:
-                            reward += 10
+                            turtleReward += 0.1
                     else:
                         if target.taskCompleted is False:
-                            reward -= 10
+                            #reward -= 10
                             pass
-
+            '''
             #Penalize if turtle is driving without a task
             if turtleHasTask is False and turtle.battery > turtle.lowBattery:
                 if equal(turtle.location, turtle.oldLoc):
-                    reward +1
+                    turtleReward += 1
                 else:
-                    reward -= 10
+                    turtleReward -= 1
                     pass
-            if turtleHasTask and equal(turtle.location, turtle.oldLoc):
-                reward -= 10
+            
+            #Check if turtle moves closer to charging station
+            if (turtleHasTask or turtle.battery < turtle.lowBattery) and equal(turtle.location, turtle.oldLoc):
+                turtleReward -= 0.2
                 pass
+
             #Check if turtle reaches target
             for target in self.targets:
                 if equal(turtle.location, target.location):
                     if turtle.type == target.type and target.taskCompleted == False and turtle.battery > turtle.lowBattery:
                         target.taskCompleted = True
-                        reward += 100
+                        turtleReward += 1
                     else:
-                        reward -= 10
+                        turtleReward -= 0.1
                         pass
-            
+                else:
+                    #Check if turtle is driving closer to the goal
+                    if turtle.battery > turtle.lowBattery and turtle.type == target.type:
+                        if target.taskCompleted == False:
+                            turtleHasTask = True
+                        if manhattenDist(turtle.location, target.location) < manhattenDist(turtle.oldLoc, target.location):
+                            if target.taskCompleted is False:
+                                turtleReward += 0.8
+                        else:
+                            if target.taskCompleted is False:
+                                turtleReward -= 1
+                                pass
+
+
             #Check if turtle reaches charging station
-            #print("Turtle location: ", turtle.location)
             for chargingStation in self.chargingStations:
                 if equal(turtle.location, chargingStation.location):
                     #print("Turtle is on charging station")
                     if turtle.battery < turtle.lowBattery:
                         #print("HEYROOKASKJASDInj")
                         turtle.charge()
-                        reward += 40
+                        turtleReward += 1
                     else:
-                        reward -= 15
+                        #reward -= 15
                         pass
 
             for chargingStation in self.chargingStations:
                 if turtle.battery < turtle.lowBattery:
                     if manhattenDist(turtle.location, chargingStation.location) < manhattenDist(turtle.oldLoc, chargingStation.location):
-                        reward += 15
+                        turtleReward += 0.8
                     else:
-                        reward -= 20
-                        
-        if any(manhattenDist(turtle.location, turtle2.location) == 1 and turtle != turtle2 for turtle in self.turtles for turtle2 in self.turtles):
-            reward -= 100
+                        pass
+                        turtleReward -= 0.8
+        epLen = max(max(self.episodeLength, 7)-7, 0)                
+        episodic_reward = epLen*0.03
+        episodic_reward = min(1, episodic_reward)
 
         if any(turtle.battery <= 0 for turtle in self.turtles):
             reward -= 100
+            reward -= episodic_reward 
             return self._get_obs(), reward, True, self._get_info()
         
         if any(equal(turtle.location, turtle2.location) and turtle != turtle2 for turtle in self.turtles for turtle2 in self.turtles):
             reward -= 100
+            reward -= episodic_reward 
             return self._get_obs(), reward, True, self._get_info()
 
         if all(target.taskCompleted for target in self.targets):
+            episodic_reward = epLen*0.03
             reward += 100
+            reward -= episodic_reward 
             return self._get_obs(), reward, True, self._get_info()
-        
+        if all(equal(turtle.location, turtle.oldLoc) for turtle in self.turtles):
+        #if all(act == 4 for act in action):
+            reward = -100
+            if not terminated:
+                return self._get_obs(), reward, True, self._get_info()
+        if self.episodeLength > 100:
+            reward -= 100
+            return self._get_obs(), reward, True, self._get_info()
 
         observation = self._get_obs()
         info = self._get_info()
-
+        
+        reward = turtleReward / len(self.turtles)
+        reward -= episodic_reward
+        #reward = max(reward, 0) 
         return observation, reward, terminated, info
 
 
