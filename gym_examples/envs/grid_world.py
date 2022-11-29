@@ -172,7 +172,7 @@ class GridWorldEnv(gym.Env):
                 if equal(turtle.location, turtle.oldLoc):
                     turtleReward += 1
                 else:
-                    turtleReward -= 1
+                    turtleReward -= 10
                     turtleReward -= turtle.lowBattery/turtle.battery
                     pass
             
