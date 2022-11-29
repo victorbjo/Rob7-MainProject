@@ -7,10 +7,12 @@ def equal(a, b):
     return all(aa == bb for aa in a for bb in b)
 class Turtle():
     def __init__(self, type, size = 6):
+        self.origLoc = [0,0]
         self.size = size
         self.type = type
         self.location = [random.randrange(0,self.size),random.randrange(0,self.size)]
         self.battery = random.randrange(20,60)
+        self.origBattery = self.battery
         self._battery = self.battery
         self.lowBattery = 30
         self.oldLoc = self.location
@@ -45,7 +47,10 @@ class Turtle():
         else:
             battery = 100
         return [self.location[0],self.location[1], battery, self.type]
-            
+    def restart(self):
+        self.location = self.origLoc
+        self.battery = self.origBattery
+        self._battery = self.battery
 class WorkStation():
     def __init__(self, type, size = 6):
         self.size = size
