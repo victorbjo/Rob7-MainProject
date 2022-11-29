@@ -31,6 +31,8 @@ class GridWorldEnv(gym.Env):
         for x in range(size):
             for y in range(size):
                 self.spawnableSpace.append([x,y])
+        self.spawnableSpace.remove(self.chargingStations[0].location)
+
         # Observations are dictionaries with the agent's and the target's location.
         # Each location is encoded as an element of {0, ..., `size`}^2, i.e. MultiDiscrete([size, size]).
         #"agent": spaces.Box(low=np.array([0, 0, 0, 1]), high=np.array([size-1, size-1, 100, 5]), dtype=int),  
@@ -188,14 +190,14 @@ class GridWorldEnv(gym.Env):
                         reward -= 20
                         
         if any(manhattenDist(turtle.location, turtle2.location) == 1 and turtle != turtle2 for turtle in self.turtles for turtle2 in self.turtles):
-            reward -= 100
+            reward -= 200
 
         if any(turtle.battery <= 0 for turtle in self.turtles):
             reward -= 100
             return self._get_obs(), reward, True, self._get_info()
         
         if any(equal(turtle.location, turtle2.location) and turtle != turtle2 for turtle in self.turtles for turtle2 in self.turtles):
-            reward -= 100
+            reward -= 1000
             return self._get_obs(), reward, True, self._get_info()
 
         if all(target.taskCompleted for target in self.targets):
