@@ -94,7 +94,7 @@ class GridWorldEnv(gym.Env):
 
     def reset(self):
         a  = self.spawnableSpace.copy()
-        #self.episodeFailed = False
+        self.episodeFailed = False
         if self.episodeFailed: 
             self.failsInARow += 1
             if self.failsInARow > 10:
@@ -172,8 +172,8 @@ class GridWorldEnv(gym.Env):
                 if equal(turtle.location, turtle.oldLoc):
                     turtleReward += 1
                 else:
-                    turtleReward -= 10
-                    turtleReward -= turtle.lowBattery/turtle.battery
+                    turtleReward -= 1
+                    #turtleReward -= turtle.lowBattery/turtle.battery
                     pass
             
             #Check if turtle moves closer to charging station
@@ -188,7 +188,7 @@ class GridWorldEnv(gym.Env):
                         target.taskCompleted = True
                         turtleReward += 1
                     else:
-                        turtleReward -= 1
+                        turtleReward -= 0.1
                         pass
                 else:
                     #Check if turtle is driving closer to the goal
@@ -213,7 +213,7 @@ class GridWorldEnv(gym.Env):
                         turtle.charge()
                         turtleReward += 1
                     else:
-                        turtleReward -= 0.2
+                        turtleReward -= 0.05
                         pass
 
             for chargingStation in self.chargingStations:
@@ -222,10 +222,10 @@ class GridWorldEnv(gym.Env):
                         turtleReward += 0.8
                     else:
                         #pass
-                        turtleReward -= 0.4
+                        turtleReward -= 0.8
         epLen = max(max(self.episodeLength, 7)-7, 0)                
         episodic_reward = epLen*0.03
-        episodic_reward = min(5, episodic_reward)
+        episodic_reward = min(1, episodic_reward)
 
         if any(turtle.battery <= 0 for turtle in self.turtles):
             reward -= 100
@@ -239,7 +239,7 @@ class GridWorldEnv(gym.Env):
             self.episodeFailed = True
             return self._get_obs(), reward, True, self._get_info()
         if any(manhattenDist(turtle.location, turtle2.location) < 3 and turtle != turtle2 for turtle in self.turtles for turtle2 in self.turtles):
-            turtleReward = -0.1
+            turtleReward -= 0.05
         if all(target.taskCompleted for target in self.targets):
             episodic_reward = epLen*0.03
             reward += 100
@@ -263,7 +263,8 @@ class GridWorldEnv(gym.Env):
         reward -= episodic_reward
         #reward = max(reward, 0) 
         if terminated and reward < 50:
-            self.episodeFailed = True
+            #self.episodeFailed = True
+            pass
         return observation, reward, terminated, info
 
 
