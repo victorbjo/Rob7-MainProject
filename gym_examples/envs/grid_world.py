@@ -23,10 +23,10 @@ class GridWorldEnv(gym.Env):
         self.chargingStations : list[ChargingStation] = []
         self.observation_space = spaces.Dict({})
         for i in range(self.numOfTurtles):
-            self.turtles.append(Turtle(i, self.size))
+            self.turtles.append(Turtle(i+1, self.size))
             self.observation_space["agent" + str(i)] = spaces.Box(low=np.array([0, 0, 0, 0]), high=np.array([size-1, size-1, 100, 5]), dtype=int)
         for i in range(self.numOfTargets):
-            self.targets.append(WorkStation(i, self.size))
+            self.targets.append(WorkStation(i+1, self.size))
             self.observation_space["target" + str(i)] = spaces.Box(low=np.array([0, 0, 0,]), high=np.array([size-1, size-1, 5]), dtype=int)
         for i in range(self.numOfChargingStations):
             self.chargingStations.append(ChargingStation(self.size))
@@ -223,6 +223,13 @@ class GridWorldEnv(gym.Env):
                     else:
                         #pass
                         turtleReward -= 0.8
+            for turtle2 in self.turtles:
+                if turtle != turtle2:
+                    if manhattenDist(turtle.location, turtle2.location) < 3:
+                        turtleReward -= 0.1*(3-manhattenDist(turtle.location, turtle2.location))
+                    if manhattenDist(turtle.oldLoc, turtle2.oldLoc) < manhattenDist(turtle.location, turtle2.location):
+                        if manhattenDist(turtle.oldLoc, turtle2.oldLoc) < 3:
+                            turtleReward += 0.1
         epLen = max(max(self.episodeLength, 7)-7, 0)                
         episodic_reward = epLen*0.03
         episodic_reward = min(1, episodic_reward)
@@ -238,8 +245,7 @@ class GridWorldEnv(gym.Env):
             reward -= episodic_reward 
             self.episodeFailed = True
             return self._get_obs(), reward, True, self._get_info()
-        if any(manhattenDist(turtle.location, turtle2.location) < 3 and turtle != turtle2 for turtle in self.turtles for turtle2 in self.turtles):
-            turtleReward -= 0.05
+
         if all(target.taskCompleted for target in self.targets):
             episodic_reward = epLen*0.03
             reward += 100

@@ -64,6 +64,10 @@ class WorkStation():
         randNum = random.randrange(0,len(spawnAbleLocations))
         self.location = spawnAbleLocations.pop(randNum)
     def getState(self):
+        if self.taskCompleted:
+            return [self.location[0],self.location[1], 0]
+        else:
+            return [self.location[0],self.location[1], self.type]
         return [self.location[0],self.location[1], self.type]
 class ChargingStation(WorkStation):
     def __init__(self, size = 6):
