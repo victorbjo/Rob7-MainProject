@@ -99,7 +99,7 @@ class GridWorldEnv(gym.Env):
 
     def reset(self):
         a  = self.spawnableSpace.copy()
-        #self.episodeFailed = False
+        self.episodeFailed = False
         if self.episodeFailed: 
             self.failsInARow += 1
             if self.failsInARow > 3:
