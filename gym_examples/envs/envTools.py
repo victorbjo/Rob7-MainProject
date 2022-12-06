@@ -7,10 +7,12 @@ def equal(a, b):
     return all(aa == bb for aa in a for bb in b)
 class Turtle():
     def __init__(self, type, size = 6):
+        self.origLoc = [0,0]
         self.size = size
         self.type = type
         self.location = [random.randrange(0,self.size),random.randrange(0,self.size)]
         self.battery = random.randrange(20,60)
+        self.origBattery = self.battery
         self._battery = self.battery
         self.lowBattery = 30
         self.oldLoc = self.location
@@ -27,7 +29,7 @@ class Turtle():
         self.location = np.clip(self.location + direction, 0, self.size - 1)
         self._battery -= 1
         if action == 4:
-            self._battery += 0.9
+            self._battery += 0.95
         self.battery = int(self._battery)
         if self.battery < 0:
             self.battery = 0
@@ -45,7 +47,10 @@ class Turtle():
         else:
             battery = 100
         return [self.location[0],self.location[1], battery, self.type]
-            
+    def restart(self):
+        self.location = self.origLoc
+        self.battery = self.origBattery
+        self._battery = self.battery
 class WorkStation():
     def __init__(self, type, size = 6):
         self.size = size
@@ -59,6 +64,10 @@ class WorkStation():
         randNum = random.randrange(0,len(spawnAbleLocations))
         self.location = spawnAbleLocations.pop(randNum)
     def getState(self):
+        if self.taskCompleted:
+            return [self.location[0],self.location[1], 0]
+        else:
+            return [self.location[0],self.location[1], self.type]
         return [self.location[0],self.location[1], self.type]
 class ChargingStation(WorkStation):
     def __init__(self, size = 6):
