@@ -160,8 +160,19 @@ class GridWorldEnv(gym.Env):
             turtleReward = 0
             #Check if turtle driving towards target
             turtleHasTask = False
-            
-            
+            '''
+            for target in self.targets:
+                if turtle.battery > turtle.lowBattery and turtle.type == target.type:
+                    if target.taskCompleted == False:
+                        turtleHasTask = True
+                    if manhattenDist(turtle.location, target.location) < manhattenDist(turtle.oldLoc, target.location):
+                        if target.taskCompleted is False:
+                            turtleReward += 0.1
+                    else:
+                        if target.taskCompleted is False:
+                            #reward -= 10
+                            pass
+            '''
 
 
             #Check if turtle reaches target
@@ -173,15 +184,20 @@ class GridWorldEnv(gym.Env):
                         tempLength = self.episodeLength-5
                         turtleReward -= tempLength/50
                     else:
-                        #Check if turtle is driving closer to the goal
-                        if turtle.battery > turtle.lowBattery and turtle.type == target.type:
-                            if target.taskCompleted == False:
-                                turtleHasTask = True
-                                if manhattenDist(turtle.location, target.location) < manhattenDist(turtle.oldLoc, target.location):
-                                    turtleReward += 0.8
-                                else:
-                                    turtleReward -= 1
-                                    pass
+                        turtleReward -= 0.1
+                        pass
+                else:
+                    #Check if turtle is driving closer to the goal
+                    if turtle.battery > turtle.lowBattery and turtle.type == target.type:
+                        if target.taskCompleted == False:
+                            turtleHasTask = True
+                        if manhattenDist(turtle.location, target.location) < manhattenDist(turtle.oldLoc, target.location):
+                            if target.taskCompleted is False:
+                                turtleReward += 0.8
+                        else:
+                            if target.taskCompleted is False:
+                                turtleReward -= 1
+                                pass
             
             #Penalize if turtle is driving without a task
             if turtleHasTask is False and turtle.battery > turtle.lowBattery:
