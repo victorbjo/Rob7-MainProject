@@ -19,8 +19,8 @@ class GridWorldEnv(gym.Env):
         self.size = size  # The size of the square grid
         self.window_size = 512  # The size of the PyGame window
         self.pixSize = self.window_size / self.size
-        self.numOfTurtles = 2
-        self.numOfTargets = 2
+        self.numOfTurtles = 3 
+        self.numOfTargets = 3
         self.numOfChargingStations = 1
         self.spawnableSpace = []
         self.turtles : list[Turtle] = []
@@ -160,7 +160,7 @@ class GridWorldEnv(gym.Env):
             turtleReward = 0
             #Check if turtle driving towards target
             turtleHasTask = False
-            '''
+            
             for target in self.targets:
                 if turtle.battery > turtle.lowBattery and turtle.type == target.type:
                     if target.taskCompleted == False:
@@ -172,7 +172,7 @@ class GridWorldEnv(gym.Env):
                         if target.taskCompleted is False:
                             #reward -= 10
                             pass
-            '''
+            
 
 
             #Check if turtle reaches target
@@ -184,20 +184,15 @@ class GridWorldEnv(gym.Env):
                         tempLength = self.episodeLength-5
                         turtleReward -= tempLength/50
                     else:
-                        turtleReward -= 0.1
-                        pass
-                else:
-                    #Check if turtle is driving closer to the goal
-                    if turtle.battery > turtle.lowBattery and turtle.type == target.type:
-                        if target.taskCompleted == False:
-                            turtleHasTask = True
-                        if manhattenDist(turtle.location, target.location) < manhattenDist(turtle.oldLoc, target.location):
-                            if target.taskCompleted is False:
-                                turtleReward += 0.8
-                        else:
-                            if target.taskCompleted is False:
-                                turtleReward -= 1
-                                pass
+                        #Check if turtle is driving closer to the goal
+                        if turtle.battery > turtle.lowBattery and turtle.type == target.type:
+                            if target.taskCompleted == False:
+                                turtleHasTask = True
+                                if manhattenDist(turtle.location, target.location) < manhattenDist(turtle.oldLoc, target.location):
+                                    turtleReward += 0.8
+                                else:
+                                    turtleReward -= 1
+                                    pass
             
             #Penalize if turtle is driving without a task
             if turtleHasTask is False and turtle.battery > turtle.lowBattery:
@@ -247,28 +242,28 @@ class GridWorldEnv(gym.Env):
 
         if any(turtle.battery <= 0 for turtle in self.turtles):
             reward -= 10
-            reward -= episodic_reward 
+            reward -= episodic_reward
             self.episodeFailed = True
             self.fail_battery += 1
             return self._get_obs(), reward, True, self._get_info()
         
         if any(equal(turtle.location, turtle2.location) and turtle != turtle2 for turtle in self.turtles for turtle2 in self.turtles):
-            reward = 10
-            reward -= episodic_reward 
+            reward = -100
+            reward += episodic_reward 
             self.episodeFailed = True
             self.fail_collision += 1
             return self._get_obs(), reward, True, self._get_info()
 
         if all(target.taskCompleted for target in self.targets):
             episodic_reward = epLen*0.03
-            reward += 10
+            reward += 100
             reward -= episodic_reward
             self.success += 1 
             return self._get_obs(), reward, True, self._get_info()
         if all(equal(turtle.location, turtle.oldLoc) for turtle in self.turtles):
         #if all(act == 4 for act in action):
-            reward = -10
             if not terminated:
+                reward = -1
                 self.episodeFailed = True
                 self.fail_noChange += 1
                 return self._get_obs(), reward, True, self._get_info()
