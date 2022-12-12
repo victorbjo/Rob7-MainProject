@@ -161,17 +161,6 @@ class GridWorldEnv(gym.Env):
             #Check if turtle driving towards target
             turtleHasTask = False
             
-            for target in self.targets:
-                if turtle.battery > turtle.lowBattery and turtle.type == target.type:
-                    if target.taskCompleted == False:
-                        turtleHasTask = True
-                    if manhattenDist(turtle.location, target.location) < manhattenDist(turtle.oldLoc, target.location):
-                        if target.taskCompleted is False:
-                            turtleReward += 0.1
-                    else:
-                        if target.taskCompleted is False:
-                            #reward -= 10
-                            pass
             
 
 
