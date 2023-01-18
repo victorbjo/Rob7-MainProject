@@ -1,22 +1,15 @@
-# Gym Examples
-Some simple examples of Gym environments and wrappers.
-For some explanations of these examples, see the [Gym documentation](https://www.gymlibrary.ml).
-
-### Environments
-This repository hosts the examples that are shown [on the environment creation documentation](https://www.gymlibrary.ml/pages/environment_creation/index).
-- `GridWorldEnv`: Simplistic implementation of gridworld environment
-
-### Wrappers
-This repository hosts the examples that are shown [on wrapper documentation](https://www.gymlibrary.ml/pages/wrappers/index).
-- `ClipReward`: A `RewardWrapper` that clips immediate rewards to a valid range
-- `DiscreteActions`: An `ActionWrapper` that restricts the action space to a finite subset
-- `RelativePosition`: An `ObservationWrapper` that computes the relative position between an agent and a target
-- `ReacherRewardWrapper`: Allow us to weight the reward terms for the reacher environment
-
-### Contributing
-If you would like to contribute, follow these steps:
-- Fork this repository
-- Clone your fork
-- Set up pre-commit via `pre-commit install`
-
-PRs may require accompanying PRs in [the documentation repo](https://github.com/Farama-Foundation/gym-docs).
+Welcome to our code base for our Rob7 project. </br>
+This code base includes everything that was used to run, test and train the simulations and models for the project.</br>
+Furthermore, trained models are present in the Git repo, along with several log files of the test runs that have been performed.</br>
+While the naming schemes of the files and overall file structure may be a bit unstructured, finding the relevant files should be easy! Look below to see which files are responsible for different aspects of the project </br>
+* Code responsible for training and simulating: test_mahed.ipynb </br>
+* Environment class can be found in /gym_examples/envs/grid_world.py </br>
+* All of the entity classes can be found in /gym_examples/envs/envTools.py </br>
+</br>
+</br>
+<h1>OBS:</h1>
+The commit history is not a full history of the development of this project, as a lot of the code has been shared and tested using different platforms. Furthermore, it does not necessarily show a full picture of every change depicted in the work sheets.</br>
+Additionally all of the values, in functions such as the reward function, may not be the same as depicted in the work sheets, due to further development of the project as well undocumented testing and development.
+</br>
+</br>
+<h3>I hope you are able to find the information you are looking for. If not, please contact victor.bjoerholm@gmail.com</h3>
