@@ -19,8 +19,8 @@ class GridWorldEnv(gym.Env):
         self.size = size  # The size of the square grid
         self.window_size = 512  # The size of the PyGame window
         self.pixSize = self.window_size / self.size
-        self.numOfTurtles = 2
-        self.numOfTargets = 2
+        self.numOfTurtles = 3 
+        self.numOfTargets = 3
         self.numOfChargingStations = 1
         self.spawnableSpace = []
         self.turtles : list[Turtle] = []
@@ -247,28 +247,28 @@ class GridWorldEnv(gym.Env):
 
         if any(turtle.battery <= 0 for turtle in self.turtles):
             reward -= 10
-            reward -= episodic_reward 
+            reward -= episodic_reward
             self.episodeFailed = True
             self.fail_battery += 1
             return self._get_obs(), reward, True, self._get_info()
         
         if any(equal(turtle.location, turtle2.location) and turtle != turtle2 for turtle in self.turtles for turtle2 in self.turtles):
-            reward = 10
-            reward -= episodic_reward 
+            reward = -100
+            reward += episodic_reward 
             self.episodeFailed = True
             self.fail_collision += 1
             return self._get_obs(), reward, True, self._get_info()
 
         if all(target.taskCompleted for target in self.targets):
             episodic_reward = epLen*0.03
-            reward += 10
+            reward += 100
             reward -= episodic_reward
             self.success += 1 
             return self._get_obs(), reward, True, self._get_info()
         if all(equal(turtle.location, turtle.oldLoc) for turtle in self.turtles):
         #if all(act == 4 for act in action):
-            reward = -10
             if not terminated:
+                reward = -1
                 self.episodeFailed = True
                 self.fail_noChange += 1
                 return self._get_obs(), reward, True, self._get_info()
